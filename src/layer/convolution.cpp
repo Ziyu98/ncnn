@@ -47,6 +47,8 @@ int Convolution::load_param(const ParamDict& pd)
     activation_params = pd.get(10, Mat());
     impl_type = pd.get(17, 0);
 
+    NCNN_LOGE("Convolution  pad = %d %d  ksize=%d %d  stride=%d %d", pad_left, pad_top, kernel_w, kernel_h, stride_w, stride_h);
+
     if (int8_scale_term)
     {
         use_int8_inference = true;
@@ -108,7 +110,7 @@ int Convolution::forward(const Mat& bottom_blob, Mat& top_blob, const Option& op
 {
     // convolv with NxN kernel
     // value = value + bias
-
+    NCNN_LOGE("USING FORWARD IN CONV NOW!!!!");
     if (opt.use_int8_inference && weight_data.elemsize == (size_t)1u)
     {
         return forward_int8(bottom_blob, top_blob, opt);
@@ -478,4 +480,18 @@ int Convolution::forward_int8(const Mat& bottom_blob, Mat& top_blob, const Optio
     return 0;
 }
 
+
+#if NCNN_CNNCACHE
+bool Convolution::needs_cache() const {return false;}
+int Convolution::forward_roi(MRect& bottom_padroi, MRect& top_roi, MRect& top_padroi) const
+{
+    top_roi.forward_in_conv_or_pool(bottom_padroi, pad_left, kernel_w, stride_w);
+    top_padroi.pad_in_conv_or_pool(top_roi, pad_left, kernel_w);
+    NCNN_LOGE("forward_roi pad = %d %d  ksize=%d %d  stride=%d %d", pad_left, pad_top, kernel_w, kernel_h, stride_w, stride_h);
+    NCNN_LOGE("ROI IS: %d, %d, %d, %d", top_roi.changed_vecs[0].x1, top_roi.changed_vecs[0].y1, top_roi.changed_vecs[0].x2, top_roi.changed_vecs[0].y2);
+    NCNN_LOGE("PAD ROI IS: %d, %d, %d, %d", top_padroi.changed_vecs[0].x1, top_padroi.changed_vecs[0].y1, top_padroi.changed_vecs[0].x2, top_padroi.changed_vecs[0].y2);
+    return 0;
+}
+
+#endif
 } // namespace ncnn

@@ -320,7 +320,8 @@ if(NCNN_INSTALL_SDK)
         mat.h
         modelbin.h
         net.h
-        opencv.h
+        mrect.h
+	opencv.h
         option.h
         paramdict.h
         pipeline.h
