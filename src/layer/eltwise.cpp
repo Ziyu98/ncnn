@@ -32,7 +32,11 @@ int Eltwise::load_param(const ParamDict& pd)
 
 int Eltwise::forward(const std::vector<Mat>& bottom_blobs, std::vector<Mat>& top_blobs, const Option& opt) const
 {
+<<<<<<< HEAD
     //NCNN_LOGE("IN ELEWISE FORWARD");
+=======
+    NCNN_LOGE("IN ELEWISE FORWARD");
+>>>>>>> 07c83f5a6d3e894bad474e9cf2e18879794b73b2
     const Mat& bottom_blob = bottom_blobs[0];
     int w = bottom_blob.w;
     int h = bottom_blob.h;

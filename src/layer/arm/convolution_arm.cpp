@@ -480,31 +480,43 @@ int Convolution_arm::destroy_pipeline(const Option& opt)
 
 int Convolution_arm::forward(const Mat& bottom_blob, Mat& top_blob, const Option& opt) const
 {
+    //return Convolution::forward(bottom_blob, top_blob, opt);
+    NCNN_LOGE("USING FORWARD IN CONV_ARM NOW!!!!, input shape:%d,%d,%d,%d", bottom_blob.dims, bottom_blob.w, bottom_blob.h, bottom_blob.c);
     if (opt.use_int8_inference && weight_data.elemsize == (size_t)1u)
     {
+        NCNN_LOGE("CONV_ARM INE 487");
         return forward_int8_arm(bottom_blob, top_blob, opt);
     }
 
     if (bottom_blob.dims != 3)
     {
+        NCNN_LOGE("CONV_ARM INE 493");
         return Convolution::forward(bottom_blob, top_blob, opt);
     }
+    NCNN_LOGE("CONV_ARM INE 496");
 
     int elembits = bottom_blob.elembits();
 
 #if __ARM_FEATURE_FP16_VECTOR_ARITHMETIC
     if (opt.use_fp16_storage && elembits == 16)
     {
-        if (opt.use_fp16_arithmetic)
+        if (opt.use_fp16_arithmetic) {
+            NCNN_LOGE("CONV_ARM INE 502");
             return forward_fp16sa(bottom_blob, top_blob, opt);
-        else
+        }
+        else {
+            NCNN_LOGE("CONV_ARM INE 506");
             return forward_fp16s(bottom_blob, top_blob, opt);
+        }
     }
 #endif
 
-    if (opt.use_bf16_storage && elembits == 16)
+    if (opt.use_bf16_storage && elembits == 16) 
+    {
+        NCNN_LOGE("CONV_ARM INE 516");
         return forward_bf16s(bottom_blob, top_blob, opt);
-
+    }
+    NCNN_LOGE("CONV_ARM INE 519");
     int w = bottom_blob.w;
     int h = bottom_blob.h;
     int channels = bottom_blob.c;
@@ -849,6 +861,7 @@ int Convolution_arm::forward(const Mat& bottom_blob, Mat& top_blob, const Option
 
     if (elempack == 1 && out_elempack == 1)
     {
+        NCNN_LOGE("impl_type=%d", impl_type);
         if (impl_type > 0 && impl_type < 6 && impl_type != 4)
         {
             // engineering is magic.
@@ -1465,6 +1478,8 @@ int Convolution_arm::forward_fp16s(const Mat& bottom_blob, Mat& top_blob, const 
 
 int Convolution_arm::forward_fp16sa(const Mat& bottom_blob, Mat& top_blob, const Option& opt) const
 {
+    NCNN_LOGE("USING FP16SA IN CONV");
+    
     int w = bottom_blob.w;
     int h = bottom_blob.h;
     int channels = bottom_blob.c;
@@ -1487,6 +1502,7 @@ int Convolution_arm::forward_fp16sa(const Mat& bottom_blob, Mat& top_blob, const
     int outw = (w - kernel_extent_w) / stride_w + 1;
     int outh = (h - kernel_extent_h) / stride_h + 1;
     int out_elempack = 1;
+    NCNN_LOGE("IN FP16SA, OUTPUT SHAPE: %d, %d", outw, outh);
     if (opt.use_packing_layout)
     {
         out_elempack = opt.use_fp16_arithmetic && num_output % 8 == 0 ? 8 : num_output % 4 == 0 ? 4 : 1;
@@ -1504,7 +1520,7 @@ int Convolution_arm::forward_fp16sa(const Mat& bottom_blob, Mat& top_blob, const
     //     }
 
     const int maxk = kernel_w * kernel_h;
-
+    
     // kernel offsets
     std::vector<int> _space_ofs(maxk);
     int* space_ofs = &_space_ofs[0];
@@ -1523,7 +1539,7 @@ int Convolution_arm::forward_fp16sa(const Mat& bottom_blob, Mat& top_blob, const
             p2 += gap;
         }
     }
-
+    NCNN_LOGE("elempack=%d, out_elempack=%d", elempack, out_elempack);
     if (elempack == 8 && out_elempack == 8)
     {
         if (kernel_w == 1 && kernel_h == 1 && dilation_w == 1 && dilation_h == 1 && stride_w == 1 && stride_h == 1)
@@ -3139,5 +3155,19 @@ int Convolution_arm::forwardDilation_arm(const Mat& bottom_blob, Mat& top_blob, 
 
     return 0;
 }
+
+#if NCNN_CNNCACHE
+/*bool Convolution_arm::needs_cache() const {return false;}
+
+int Convolution_arm::forward_roi(MRect& bottom_padroi, MRect& top_roi, MRect& top_padroi) const
+{
+    top_roi.forward_in_conv_or_pool(bottom_padroi, pad_left, kernel_w, stride_w);
+    top_padroi.pad_in_conv_or_pool(top_roi, pad_left, kernel_w);
+    NCNN_LOGE("IN CONV_ARM, PAD IS %d, KERNEL IS %d, STRIDE IS %d", pad_left, kernel_w, stride_w);
+    NCNN_LOGE("ROI IS: %d, %d, %d, %d", top_roi.changed_vecs[0].x1, top_roi.changed_vecs[0].y1, top_roi.changed_vecs[0].x2, top_roi.changed_vecs[0].y2);
+    return 0;
+}
+*/
+#endif
 
 } // namespace ncnn

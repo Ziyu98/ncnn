@@ -71,7 +71,11 @@ int ReLU::forward_inplace_int8(Mat& bottom_top_blob, const Option& opt) const
 
 int ReLU::forward_inplace(Mat& bottom_top_blob, const Option& opt) const
 {
+<<<<<<< HEAD
     //NCNN_LOGE("IN RELU FORWARD");
+=======
+    NCNN_LOGE("IN RELU FORWARD");
+>>>>>>> 07c83f5a6d3e894bad474e9cf2e18879794b73b2
     if (bottom_top_blob.elemsize == 1u)
         return ReLU::forward_inplace_int8(bottom_top_blob, opt);
 

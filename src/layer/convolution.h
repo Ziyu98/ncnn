@@ -32,10 +32,16 @@ public:
 
     virtual int forward(const Mat& bottom_blob, Mat& top_blob, const Option& opt) const;
 
+<<<<<<< HEAD
 
 #if NCNN_CNNCACHE
     virtual int forward_roi(MRect& bottom_padroi, MRect& top_roi, MRect& top_padroi) const;
     virtual int forward_cached(const Mat& bottom_blob, Mat& top_blob, const Option& opt, MRect& bottom_padroi, MRect& top_roi, MRect& top_padroi, Mat& cached_blob) const;
+=======
+#if NCNN_CNNCACHE
+    virtual int forward_roi(MRect& bottom_padroi, MRect& top_roi, MRect& top_padroi) const;
+    //virtual int forward_cached(const Mat& bottom_blob, Mat& top_blob, const Option& opt, MRect& bottom_padroi, MRect& top_roi, MRect& top_padroi, Mat& cached_blob) const;
+>>>>>>> 07c83f5a6d3e894bad474e9cf2e18879794b73b2
     virtual bool needs_cache() const;
 #endif
 

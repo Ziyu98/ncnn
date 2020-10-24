@@ -278,7 +278,10 @@ public:
 #if NCNN_CNNCACHE
     bool cache_mode;
     std::vector<Mat> blob_mats_cached;
+<<<<<<< HEAD
     std::vector<Mat> temp_tops;
+=======
+>>>>>>> 07c83f5a6d3e894bad474e9cf2e18879794b73b2
     std::vector<MRect> rois;
     std::vector<MRect> padrois;
     int input_rois(int blob_index, MRect& roi, MRect& padroi);

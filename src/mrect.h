@@ -50,7 +50,10 @@ public:
     void copyFrom(MRect other) {
         x_offset = other.x_offset;
         y_offset = other.y_offset;
+<<<<<<< HEAD
         layersize = other.layersize;
+=======
+>>>>>>> 07c83f5a6d3e894bad474e9cf2e18879794b73b2
         changed_vecs.resize(0);
     	for (struct rect r: other.changed_vecs) {
             this->changed_vecs.push_back(r);
@@ -58,6 +61,7 @@ public:
     }
 
     std::string info() {
+<<<<<<< HEAD
         std::string ret("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
         NCNN_LOGE("ROI INFO\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         //char a[64];
@@ -71,6 +75,17 @@ public:
         }
         //ret += "-----------------------------------------------\n";
         NCNN_LOGE("--------------------------------------------------");
+=======
+        std::string ret("");
+        char a[64];
+        for (unsigned i = 0; i < changed_vecs.size(); i ++) {
+            if (i > 0)
+                ret += ", ";
+            struct rect r1 = changed_vecs[i];
+            sprintf(a, "(%d,%d,%d,%d)", r1.x1, r1.y1, r1.x2, r1.y2);
+            ret += a;
+        }
+>>>>>>> 07c83f5a6d3e894bad474e9cf2e18879794b73b2
         return ret;
     }
 
@@ -84,10 +99,17 @@ public:
         // TODO: not correct yet
         // int off = stride > 1 ? 1 : 0;
         if (pad >= 0) { // SAME
+<<<<<<< HEAD
             r1.x1 = std::max(0, (r2.x1 + pad) / stride);
             r1.y1 = std::max(0, (r2.y1 + pad) / stride);
             r1.x2 = (r2.x2 - pad) / stride;
             r1.y2 = (r2.y2 - pad) / stride;
+=======
+            r1.x1 = std::max(0, (r2.x1 + ksize / 2) / stride);
+            r1.y1 = std::max(0, (r2.y1 + ksize / 2) / stride);
+            r1.x2 = (r2.x2 - ksize / 2) / stride;
+            r1.y2 = (r2.y2 - ksize / 2) / stride;
+>>>>>>> 07c83f5a6d3e894bad474e9cf2e18879794b73b2
         }
         else if (pad == -233) { // VALID
             r1.x1 = std::max(0, (r2.x1 + ksize / 2) / stride);
@@ -103,8 +125,11 @@ public:
         // offset
         x_offset = bottom_mrect.x_offset / stride;
         y_offset = bottom_mrect.y_offset / stride;
+<<<<<<< HEAD
         layersize = bottom_mrect.layersize / stride;
         NCNN_LOGE("IN FORWARD CONV OR POOL, INPUT LAYERSIZE=%d, OUTPUT LAYERSIZE=%d", bottom_mrect.layersize, layersize);
+=======
+>>>>>>> 07c83f5a6d3e894bad474e9cf2e18879794b73b2
 
         size_t size = bottom_mrect.size();
         changed_vecs.resize(size);
@@ -116,12 +141,21 @@ public:
     }
 
     void pad_rect_conv_or_pool(
+<<<<<<< HEAD
         struct rect& r1, struct rect& r2, int pad, int ksize, int layersize) {
         if (pad > 0) {
             r1.x1 = std::max(0, r2.x1 - ksize + 1);
             r1.y1 = std::max(0, r2.y1 - ksize + 1);
             r1.x2 = std::min(r2.x2 + ksize - 1, layersize - 1);
             r1.y2 = std::min(r2.y2 + ksize - 1, layersize - 1);
+=======
+        struct rect& r1, struct rect& r2, int pad, int ksize) {
+        if (pad > 0) {
+            r1.x1 = std::max(0, r2.x1 - ksize + 1);
+            r1.y1 = std::max(0, r2.y1 - ksize + 1);
+            r1.x2 = r2.x2 + ksize - 1;
+            r1.y2 = r2.y2 + ksize - 1;
+>>>>>>> 07c83f5a6d3e894bad474e9cf2e18879794b73b2
         }
         else {
             r1.x1 = r2.x1;
@@ -134,17 +168,26 @@ public:
     int pad_in_conv_or_pool(MRect& top_mrect, int pad, int ksize) {
         size_t size = top_mrect.size();
         changed_vecs.resize(size);
+<<<<<<< HEAD
         layersize = top_mrect.layersize;
         for (size_t i = 0; i < size; i++) {
             pad_rect_conv_or_pool(
                 changed_vecs[i], top_mrect.changed_vecs[i], pad, ksize, top_mrect.layersize);
+=======
+        for (size_t i = 0; i < size; i++) {
+            pad_rect_conv_or_pool(
+                changed_vecs[i], top_mrect.changed_vecs[i], pad, ksize);
+>>>>>>> 07c83f5a6d3e894bad474e9cf2e18879794b73b2
         }
         return 0;
     }
 
     int x_offset;
     int y_offset;
+<<<<<<< HEAD
     int layersize;
+=======
+>>>>>>> 07c83f5a6d3e894bad474e9cf2e18879794b73b2
     std::vector<struct rect> changed_vecs;
 };
 

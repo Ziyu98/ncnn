@@ -34,6 +34,7 @@ Eltwise_arm::Eltwise_arm()
 
 int Eltwise_arm::forward(const std::vector<Mat>& bottom_blobs, std::vector<Mat>& top_blobs, const Option& opt) const
 {
+    NCNN_LOGE("IN ELEWISE_ARM FORWARD");
     int elembits = bottom_blobs[0].elembits();
 
 #if __ARM_FEATURE_FP16_VECTOR_ARITHMETIC

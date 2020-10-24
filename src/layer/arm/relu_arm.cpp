@@ -34,6 +34,7 @@ ReLU_arm::ReLU_arm()
 
 int ReLU_arm::forward_inplace(Mat& bottom_top_blob, const Option& opt) const
 {
+    NCNN_LOGE("IN RELU_ARM FORWARD");
     if (bottom_top_blob.elemsize == 1u)
         return forward_inplace_int8_neon(bottom_top_blob, opt);
 
