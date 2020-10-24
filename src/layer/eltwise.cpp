@@ -32,6 +32,7 @@ int Eltwise::load_param(const ParamDict& pd)
 
 int Eltwise::forward(const std::vector<Mat>& bottom_blobs, std::vector<Mat>& top_blobs, const Option& opt) const
 {
+    //NCNN_LOGE("IN ELEWISE FORWARD");
     const Mat& bottom_blob = bottom_blobs[0];
     int w = bottom_blob.w;
     int h = bottom_blob.h;
@@ -185,5 +186,55 @@ int Eltwise::forward(const std::vector<Mat>& bottom_blobs, std::vector<Mat>& top
 
     return 0;
 }
+
+
+#if NCNN_CNNCACHE
+bool Eltwise::needs_cache() const {return false;}
+int Eltwise::forward_roi(std::vector<MRect>& bottom_padroi, std::vector<MRect>& top_roi, std::vector<MRect>& top_padroi) const
+{
+    top_roi.resize(1);
+    top_padroi.resize(1);
+    if (!bottom_padroi[1].size()) {
+        for (MRect& roi: top_roi) {
+            roi.copyFrom(bottom_padroi[0]);
+        }
+        for (MRect& roi: top_padroi) {
+            roi.copyFrom(bottom_padroi[0]);
+        }
+    }
+    else{
+        MRect& mr = top_roi[0];
+        MRect& mr2 = top_padroi[0];
+        for (size_t i = 0, max = bottom_padroi[0].size(); i < max; i++) {
+            int x1 = bottom_padroi[0].changed_vecs[i].x1;
+            int y1 = bottom_padroi[0].changed_vecs[i].y1;
+            int x2 = bottom_padroi[0].changed_vecs[i].x2;
+            int y2 = bottom_padroi[0].changed_vecs[i].y2;
+            for (size_t j = 1, maxx = bottom_padroi.size(); j < maxx; j++) {
+
+                const struct rect temp = bottom_padroi[j].changed_vecs[i];
+                if (temp.x1 <= x1 && temp.y1 <= y1) {
+                    x1 = temp.x1;
+                    y1 = temp.y1;
+                }
+                if (temp.x2 >= x2 && temp.y2 >= y2) {
+                    x2 = temp.x2;
+                    y2 = temp.y2;
+                }
+            }
+            mr.add_rect(x1, y1, x2, y2);
+            mr2.add_rect(x1, y1, x2, y2);
+        }
+    }
+
+    //top_roi.forward_in_conv_or_pool(bottom_padroi, pad_left, kernel_w, stride_w);
+    //top_padroi.pad_in_conv_or_pool(top_roi, pad_left, kernel_w);
+    //NCNN_LOGE("IN ELEWISE LAYER");
+    //NCNN_LOGE("ROI IS: %d, %d, %d, %d", top_roi[0].changed_vecs[0].x1, top_roi[0].changed_vecs[0].y1, top_roi[0].changed_vecs[0].x2, top_roi[0].changed_vecs[0].y2);
+    //NCNN_LOGE("PAD ROI IS: %d, %d, %d, %d", top_padroi[0].changed_vecs[0].x1, top_padroi[0].changed_vecs[0].y1, top_padroi[0].changed_vecs[0].x2, top_padroi[0].changed_vecs[0].y2);
+    return 0;
+}
+
+#endif
 
 } // namespace ncnn

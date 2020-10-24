@@ -20,7 +20,7 @@
 #include "option.h"
 #include "paramdict.h"
 #include "platform.h"
-
+#include "mrect.h"
 #include <math.h>
 
 #if NCNN_VULKAN
@@ -92,6 +92,13 @@ public:
     // return 0 if success
     virtual int forward_inplace(std::vector<Mat>& bottom_top_blobs, const Option& opt) const;
     virtual int forward_inplace(Mat& bottom_top_blob, const Option& opt) const;
+#if NCNN_CNNCACHE
+    virtual int forward_roi(std::vector<MRect>& bottom_padrois, std::vector<MRect>& top_rois, std::vector<MRect>& top_padrois) const;
+    virtual int forward_roi(MRect& bottom_padroi, MRect& top_roi, MRect& top_padroi) const;
+    virtual int forward_cached(const Mat& bottom_blob, Mat& top_blob, const Option& opt, MRect& bottom_padroi, MRect& top_roi, MRect& top_padroi, Mat& cached_blob) const;
+    virtual bool needs_cache() const {return false;}
+#endif
+
 
 #if NCNN_VULKAN
 public:

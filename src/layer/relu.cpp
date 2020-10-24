@@ -71,6 +71,7 @@ int ReLU::forward_inplace_int8(Mat& bottom_top_blob, const Option& opt) const
 
 int ReLU::forward_inplace(Mat& bottom_top_blob, const Option& opt) const
 {
+    //NCNN_LOGE("IN RELU FORWARD");
     if (bottom_top_blob.elemsize == 1u)
         return ReLU::forward_inplace_int8(bottom_top_blob, opt);
 

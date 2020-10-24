@@ -108,7 +108,7 @@ int Convolution::forward(const Mat& bottom_blob, Mat& top_blob, const Option& op
 {
     // convolv with NxN kernel
     // value = value + bias
-
+    //NCNN_LOGE("USING FORWARD IN CONV NOW!!!!");
     if (opt.use_int8_inference && weight_data.elemsize == (size_t)1u)
     {
         return forward_int8(bottom_blob, top_blob, opt);
@@ -478,4 +478,136 @@ int Convolution::forward_int8(const Mat& bottom_blob, Mat& top_blob, const Optio
     return 0;
 }
 
+
+#if NCNN_CNNCACHE
+bool Convolution::needs_cache() const {return false;}
+int Convolution::forward_roi(MRect& bottom_padroi, MRect& top_roi, MRect& top_padroi) const
+{
+    top_roi.forward_in_conv_or_pool(bottom_padroi, pad_left, kernel_w, stride_w);
+    top_padroi.pad_in_conv_or_pool(top_roi, pad_left, kernel_w);
+    // check if there is intersected rects
+    NCNN_LOGE("OK 11");
+    if (top_padroi.size() > 1) {
+        size_t maxx = 0;
+        size_t max = top_padroi.changed_vecs.size();
+        while (maxx != max) {
+            max = top_padroi.changed_vecs.size();
+            maxx = top_padroi.changed_vecs.size();
+            for (size_t i = 0; i < maxx; i++) {
+                for (size_t j = i + 1; j < maxx; j++) {
+                    const struct rect temp1 = top_padroi.changed_vecs[i];
+                    const struct rect temp2 = top_padroi.changed_vecs[j];
+                    if ((temp2.x1 >= temp1.x1 && temp2.y1 >= temp1.y1 && temp2.x1 <= temp1.x2 && temp2.y1 <= temp1.y2) 
+                        || (temp1.x1 >= temp2.x1 && temp1.y1 >= temp2.y1 && temp1.x1 <= temp2.x2 && temp1.y1 <= temp2.y2)) {
+                        // intersected
+                        int x1 = std::min(temp1.x1, temp2.x1);
+                        int y1 = std::min(temp1.y1, temp2.y1);
+                        int x2 = std::max(temp1.x2, temp2.x2);
+                        int y2 = std::max(temp1.y2, temp2.y2);
+                        auto begin = top_padroi.changed_vecs.begin();
+                        // ???? wrong!!!!
+                        //top_padroi.changed_vecs.erase(begin + i);
+                        top_padroi.changed_vecs[i] = rect(x1, y1, x2, y2);
+                        top_padroi.changed_vecs.erase(begin + j);
+                        
+                        j--;
+                        maxx--;
+                    }
+
+                }
+            }
+        }
+    }
+    
+    NCNN_LOGE("OK 22");
+    NCNN_LOGE("in convolution, top_roi info: ");
+    top_roi.info();
+    NCNN_LOGE("in convolution, top_padroi info: ");
+    top_padroi.info();
+
+    //NCNN_LOGE("IN CONV LAYER, LAYER SIZE = %d", top_roi.layersize);
+    //NCNN_LOGE("IN CONV LAYER pad = %d %d  ksize=%d %d  stride=%d %d", pad_left, pad_top, kernel_w, kernel_h, stride_w, stride_h);
+    //NCNN_LOGE("ROI IS: %d, %d, %d, %d", top_roi.changed_vecs[0].x1, top_roi.changed_vecs[0].y1, top_roi.changed_vecs[0].x2, top_roi.changed_vecs[0].y2);
+    //NCNN_LOGE("PAD ROI IS: %d, %d, %d, %d", top_padroi.changed_vecs[0].x1, top_padroi.changed_vecs[0].y1, top_padroi.changed_vecs[0].x2, top_padroi.changed_vecs[0].y2);
+    return 0;
+}
+
+int Convolution::forward_cached(const Mat& bottom_blob, Mat& top_blob, const Option& opt, MRect& bottom_padroi, MRect& top_roi, MRect& top_padroi, Mat& cached_blob, std::vector<Mat&> temp_tops) const
+{
+    int w = bottom_blob.w;
+    int h = bottom_blob.h;
+    int channels = bottom_blob.c;
+    size_t elemsize = bottom_blob.elemsize;
+
+    //     NCNN_LOGE("Convolution input %d x %d  pad = %d %d  ksize=%d %d  stride=%d %d", w, h, pad_w, pad_h, kernel_w, kernel_h, stride_w, stride_h);
+
+    const int kernel_extent_w = dilation_w * (kernel_w - 1) + 1;
+    const int kernel_extent_h = dilation_h * (kernel_h - 1) + 1;
+
+    /*``Mat bottom_blob_bordered;
+    ``make_padding(bottom_blob, bottom_blob_bordered, opt);
+    ``if (bottom_blob_bordered.empty())
+        ``return -100;
+
+    ``w = bottom_blob_bordered.w;
+    ``h = bottom_blob_bordered.h;
+
+    int outw = (w - kernel_extent_w) / stride_w + 1;
+    int outh = (h - kernel_extent_h) / stride_h + 1;
+
+    ``const int maxk = kernel_w * kernel_h;
+
+    // kernel offsets
+    std::vector<int> _space_ofs(maxk);
+    int* space_ofs = &_space_ofs[0];
+    {
+        int p1 = 0;
+        int p2 = 0;
+        int gap = w * dilation_h - kernel_w * dilation_w;
+        for (int i = 0; i < kernel_h; i++)
+        {
+            for (int j = 0; j < kernel_w; j++)
+            {
+                space_ofs[p1] = p2;
+                p1++;
+                p2 += dilation_w;
+            }
+            p2 += gap;
+        }
+    }
+
+    // float32
+    top_blob.create(outw, outh, num_output, elemsize, opt.blob_allocator);
+    if (top_blob.empty())
+        return -100;*/
+
+    /*pad_left = pd.set(4, 0);
+    pad_right = pd.set(15, 0);
+    pad_top = pd.set(14, 0);
+    pad_bottom = pd.set(16, 0);*/
+
+    for (size_t i = 0, max = bottom_padroi.size(); i < max; i++) {
+        Mat new_bottom_blob;
+        int x1 = bottom_padroi.changed_vecs[i].x1;
+        int x2 = bottom_padroi.changed_vecs[i].x2;
+        int y1 = bottom_padroi.changed_vecs[i].y1;
+        int y2 = bottom_padroi.changed_vecs[i].y2;
+        int new_w = x2 - x1 + 1;
+        int new_h = y2 - y1 + 1;
+        new_bottom_blob.create(new_w, new_h, channels, elemsize, opt.blob_allocator);
+        new_bottom_blob.data = (float*)fastMalloc(new_bottom_blob.total()*elemsize + (int)sizeof(new_bottom_blob.refcount));
+        for (size_t j = 0; j < h; j++) {
+            memcpy((float*)new_bottom_blob.data + j*new_w*sizeof(float), (float*)bottom_blob.data+y1*w+x1, new_w*sizeof(float));
+        }
+        //Mat& new_top_blob;
+        int ret = Convolution::forward(new_bottom_blob, temp_tops[i], opt);
+        //top_blob.release();
+    }
+
+    //int ret = Convolution::forward(bottom_blob, top_blob, opt);
+    //top_blob.release();
+    return Convolution::forward(bottom_blob, top_blob, opt);
+}
+
+#endif
 } // namespace ncnn

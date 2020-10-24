@@ -32,6 +32,13 @@ public:
 
     virtual int forward(const Mat& bottom_blob, Mat& top_blob, const Option& opt) const;
 
+
+#if NCNN_CNNCACHE
+    virtual int forward_roi(MRect& bottom_padroi, MRect& top_roi, MRect& top_padroi) const;
+    virtual int forward_cached(const Mat& bottom_blob, Mat& top_blob, const Option& opt, MRect& bottom_padroi, MRect& top_roi, MRect& top_padroi, Mat& cached_blob) const;
+    virtual bool needs_cache() const;
+#endif
+
 protected:
     void make_padding(const Mat& bottom_blob, Mat& bottom_blob_bordered, const Option& opt) const;
 

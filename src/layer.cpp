@@ -111,6 +111,33 @@ int Layer::forward_inplace(Mat& /*bottom_top_blob*/, const Option& /*opt*/) cons
     return -1;
 }
 
+
+#if NCNN_CNNCACHE
+int Layer::forward_roi(std::vector<MRect>& bottom_padrois, std::vector<MRect>& top_rois, std::vector<MRect>& top_padrois) const
+{
+    for (MRect& roi: top_rois) {
+        roi.copyFrom(bottom_padrois[0]);
+    }
+    for (MRect& roi: top_padrois) {
+        roi.copyFrom(bottom_padrois[0]);
+    }
+    return 0;
+}
+
+int Layer::forward_roi(MRect& bottom_padroi, MRect& top_roi, MRect& top_padroi) const
+{
+    top_roi.copyFrom(bottom_padroi);
+    top_padroi.copyFrom(bottom_padroi);
+    //NCNN_LOGE("IN PURE FORWARD_ROI, INPUT LAYERSIZE=%d, OUTPUT LAYERSIZE=%d", bottom_padroi.layersize, top_roi.layersize);
+    return 0;
+}
+
+int Layer::forward_cached(const Mat& bottom_blob, Mat& top_blob, const Option& opt, MRect& bottom_padroi, MRect& top_roi, MRect& top_padroi, Mat& cached_blob) const
+{
+    return forward(bottom_blob, top_blob, opt);
+}
+#endif
+
 #if NCNN_VULKAN
 int Layer::upload_model(VkTransfer& /*cmd*/, const Option& /*opt*/)
 {

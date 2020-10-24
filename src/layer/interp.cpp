@@ -550,4 +550,68 @@ int Interp::forward(const std::vector<Mat>& bottom_blobs, std::vector<Mat>& top_
     return 0;
 }
 
+#if NCNN_CNNCACHE
+bool Interp::needs_cache() const {return false;}
+int Interp::forward_roi(MRect& bottom_padroi, MRect& top_roi, MRect& top_padroi) const
+{
+    NCNN_LOGE("BEGINING OF INTERP");
+    NCNN_LOGE("BOTTOM ROI INFO:");
+    bottom_padroi.info();
+    top_roi.layersize = bottom_padroi.layersize * height_scale;
+    for (size_t i = 0, max = bottom_padroi.size(); i < max; i++) {
+        int x1 = bottom_padroi.changed_vecs[i].x1;
+        int y1 = bottom_padroi.changed_vecs[i].y1;
+        int x2 = bottom_padroi.changed_vecs[i].x2;
+        int y2 = bottom_padroi.changed_vecs[i].y2;
+        x1 = height_scale * x1;
+        y1 = width_scale * y1;
+        x2 = height_scale * x2 + 1;
+        y2 = width_scale * y2 + 1;
+        top_roi.add_rect(x1, y1, x2, y2);
+        top_roi.info();
+    }
+    if (top_roi.size() > 1) {
+        size_t maxx = 0;
+        size_t max = top_roi.changed_vecs.size();
+        while (maxx != max) {
+            max = top_roi.changed_vecs.size();
+            maxx = top_roi.changed_vecs.size();
+            for (size_t i = 0; i < maxx; i++) {
+                for (size_t j = i + 1; j < maxx; j++) {
+                    const struct rect temp1 = top_roi.changed_vecs[i];
+                    const struct rect temp2 = top_roi.changed_vecs[j];
+                    if ((temp2.x1 >= temp1.x1 && temp2.y1 >= temp1.y1 && temp2.x1 <= temp1.x2 && temp2.y1 <= temp1.y2) 
+                        || (temp1.x1 >= temp2.x1 && temp1.y1 >= temp2.y1 && temp1.x1 <= temp2.x2 && temp1.y1 <= temp2.y2)) {
+                        // intersected
+                        int x1 = std::min(temp1.x1, temp2.x1);
+                        int y1 = std::min(temp1.y1, temp2.y1);
+                        int x2 = std::max(temp1.x2, temp2.x2);
+                        int y2 = std::max(temp1.y2, temp2.y2);
+                        auto begin = top_roi.changed_vecs.begin();
+                        // ???? wrong!!!!
+                        top_roi.changed_vecs.erase(begin + i);
+                        top_roi.changed_vecs.erase(begin + j);
+                        top_roi.changed_vecs[i] = rect(x1, y1, x2, y2);
+                        j--;
+                        maxx--;
+                    }
+                    top_roi.info();
+
+                }
+            }
+        }
+    }
+    
+    top_padroi.copyFrom(top_roi);
+    NCNN_LOGE("END OF INTERP");
+    //top_roi.forward_in_conv_or_pool(bottom_padroi, pad_left, kernel_w, stride_w);
+    //top_padroi.pad_in_conv_or_pool(top_roi, pad_left, kernel_w);
+    //NCNN_LOGE("IN FORWARD ROI OF INTERP, OUTPUT LAYERSIZE=%d %d", top_roi.layersize, top_padroi.layersize);
+    //NCNN_LOGE("IN INTERP LAYER");
+    //NCNN_LOGE("ROI IS: %d, %d, %d, %d", top_roi.changed_vecs[0].x1, top_roi.changed_vecs[0].y1, top_roi.changed_vecs[0].x2, top_roi.changed_vecs[0].y2);
+    //NCNN_LOGE("PAD ROI IS: %d, %d, %d, %d", top_padroi.changed_vecs[0].x1, top_padroi.changed_vecs[0].y1, top_padroi.changed_vecs[0].x2, top_padroi.changed_vecs[0].y2);
+    return 0;
+}
+
+#endif
 } // namespace ncnn

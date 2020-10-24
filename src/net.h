@@ -20,6 +20,7 @@
 #include "mat.h"
 #include "option.h"
 #include "platform.h"
+#include "mrect.h"
 
 #if __ANDROID_API__ >= 9
 #include <android/asset_manager.h>
@@ -151,7 +152,7 @@ protected:
     Layer* create_custom_layer(const char* type);
 #endif // NCNN_STRING
     Layer* create_custom_layer(int index);
-    int forward_layer(int layer_index, std::vector<Mat>& blob_mats, const Option& opt) const;
+    int forward_layer(int layer_index, std::vector<Mat>& blob_mats, Extractor* extract, const Option& opt) const;
 
 #if NCNN_VULKAN
     int forward_layer(int layer_index, std::vector<Mat>& blob_mats, std::vector<VkMat>& blob_mats_gpu, VkCompute& cmd, const Option& opt) const;
@@ -272,6 +273,22 @@ private:
     std::vector<VkMat> blob_mats_gpu;
     std::vector<VkImageMat> blob_mats_gpu_image;
 #endif // NCNN_VULKAN
+
+public:
+#if NCNN_CNNCACHE
+    bool cache_mode;
+    std::vector<Mat> blob_mats_cached;
+    std::vector<Mat> temp_tops;
+    std::vector<MRect> rois;
+    std::vector<MRect> padrois;
+    int input_rois(int blob_index, MRect& roi, MRect& padroi);
+    int input_rois(const char* blob_name, MRect& roi, MRect& padroi);
+    int update_cnncache();
+    int clear_cnncache();
+    int clear_blob_data();
+    void set_cache_mode(bool mode) {cache_mode = mode;}
+#endif
+
 };
 
 } // namespace ncnn

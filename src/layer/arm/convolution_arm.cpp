@@ -1492,7 +1492,7 @@ int Convolution_arm::forward_fp16sa(const Mat& bottom_blob, Mat& top_blob, const
         out_elempack = opt.use_fp16_arithmetic && num_output % 8 == 0 ? 8 : num_output % 4 == 0 ? 4 : 1;
     }
     size_t out_elemsize = elemsize / elempack * out_elempack;
-
+    NCNN_LOGE("OUTPUT SHAPE: %d, %d, %d, kernel_w: %d, kernel_extent_w: %d, stride: %d, pad: %d", outw, outh, num_output/out_elempack, kernel_w, kernel_extent_w, stride_w, pad_left);
     top_blob.create(outw, outh, num_output / out_elempack, out_elemsize, out_elempack, opt.blob_allocator);
     if (top_blob.empty())
         return -100;

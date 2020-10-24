@@ -325,4 +325,20 @@ void Pooling::make_padding(const Mat& bottom_blob, Mat& bottom_blob_bordered, co
     }
 }
 
+#if NCNN_CNNCACHE
+bool Pooling::needs_cache() const {return false;}
+int Pooling::forward_roi(MRect& bottom_padroi, MRect& top_roi, MRect& top_padroi) const
+{
+    top_roi.forward_in_conv_or_pool(bottom_padroi, pad_left, kernel_w, stride_w);
+    top_padroi.copyFrom(top_roi);
+    //top_padroi.pad_in_conv_or_pool(top_roi, pad_left, kernel_w);
+    //NCNN_LOGE("forward_roi pad = %d %d  ksize=%d %d  stride=%d %d", pad_left, pad_top, kernel_w, kernel_h, stride_w, stride_h);
+    //NCNN_LOGE("IN POOLING LAYER, pad = %d %d  ksize=%d %d  stride=%d %d", pad_left, pad_top, kernel_w, kernel_h, stride_w, stride_h);
+    //NCNN_LOGE("ROI IS: %d, %d, %d, %d", top_roi.changed_vecs[0].x1, top_roi.changed_vecs[0].y1, top_roi.changed_vecs[0].x2, top_roi.changed_vecs[0].y2);
+    //NCNN_LOGE("PAD ROI IS: %d, %d, %d, %d", top_padroi.changed_vecs[0].x1, top_padroi.changed_vecs[0].y1, top_padroi.changed_vecs[0].x2, top_padroi.changed_vecs[0].y2);
+    return 0;
+}
+
+#endif
+
 } // namespace ncnn
