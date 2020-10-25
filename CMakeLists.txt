@@ -52,11 +52,8 @@ option(NCNN_DISABLE_PIC "disable position-independent code" OFF)
 option(NCNN_BUILD_TESTS "build tests" OFF)
 option(NCNN_COVERAGE "build for coverage" OFF)
 option(NCNN_BUILD_BENCHMARK "build benchmark" OFF)
-<<<<<<< HEAD
+
 option(NCNN_CNNCACHE "cnncache" ON)
-=======
-option(NCNN_CNNCACHE "build cnncache" ON)
->>>>>>> 07c83f5a6d3e894bad474e9cf2e18879794b73b2
 if(ANDROID OR IOS OR NCNN_SIMPLESTL)
     option(NCNN_DISABLE_RTTI "disable rtti" ON)
     option(NCNN_BUILD_TOOLS "build tools" OFF)

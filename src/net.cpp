@@ -1117,11 +1117,7 @@ int Net::forward_layer(int layer_index, std::vector<Mat>& blob_mats, Extractor* 
 {
     const Layer* layer = layers[layer_index];
 
-<<<<<<< HEAD
     //NCNN_LOGE("forward_layer = %d， one_blob_only is = %d, type is = %s, bottom size = %d, top size = %d", layer_index, layer->one_blob_only, layer->type.c_str(), layer->bottoms.size(), layer->tops.size());
-=======
-    NCNN_LOGE("forward_layer = %d， one_blob_only is = %d, type is = %s, bottom size = %d, top size = %d", layer_index, layer->one_blob_only, layer->type.c_str(), layer->bottoms.size(), layer->tops.size());
->>>>>>> 07c83f5a6d3e894bad474e9cf2e18879794b73b2
 
     if (layer->one_blob_only)
     {
@@ -1253,11 +1249,7 @@ int Net::forward_layer(int layer_index, std::vector<Mat>& blob_mats, Extractor* 
             if (extract->cache_mode) {
                 int ret = layer->forward_cached(bottom_blob, top_blob, opt,
                     extract->padrois[bottom_blob_index], extract->rois[top_blob_index],
-<<<<<<< HEAD
-                    extract->padrois[top_blob_index], extract->blob_mats_cached[layer_index], extract->temp_tops);
-=======
                     extract->padrois[top_blob_index], extract->blob_mats_cached[layer_index]);
->>>>>>> 07c83f5a6d3e894bad474e9cf2e18879794b73b2
             }
             else {
                 int ret = layer->forward(bottom_blob, top_blob, opt);

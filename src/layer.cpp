@@ -128,10 +128,7 @@ int Layer::forward_roi(MRect& bottom_padroi, MRect& top_roi, MRect& top_padroi) 
 {
     top_roi.copyFrom(bottom_padroi);
     top_padroi.copyFrom(bottom_padroi);
-<<<<<<< HEAD
     //NCNN_LOGE("IN PURE FORWARD_ROI, INPUT LAYERSIZE=%d, OUTPUT LAYERSIZE=%d", bottom_padroi.layersize, top_roi.layersize);
-=======
->>>>>>> 07c83f5a6d3e894bad474e9cf2e18879794b73b2
     return 0;
 }
 
