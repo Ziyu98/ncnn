@@ -1,20 +1,13 @@
 #ifndef NCNN_MRECT_H
 #define NCNN_MRECT_H
-
+#include <math.h>
 #if NCNN_CNNCACHE
 
 namespace ncnn {
 
 
-
-inline bool skip_reuse(bool* cached_map, int outw, int outh) {
-    int changed_pixel = 0;
-    for (int i = 0; i < outw * outh; i ++) {
-        changed_pixel += cached_map[i] ? 1 : 0;
-    }
-    float ratio = 1.0 * changed_pixel / outw / outh;
-    if (ratio > 0.8) return true;
-    else return false;
+inline bool skip_reuse() {
+    return false;
 }
 
 struct rect{
@@ -57,9 +50,9 @@ public:
         }
     }
 
-    std::string info() {
-        std::string ret("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
-        NCNN_LOGE("ROI INFO\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+    void info() {
+        //std::string ret("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+        NCNN_LOGE("INFO BEGIN~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         //char a[64];
         for (unsigned i = 0; i < changed_vecs.size(); i ++) {
             //if (i > 0)
@@ -70,12 +63,19 @@ public:
             //ret += a;
         }
         //ret += "-----------------------------------------------\n";
-        NCNN_LOGE("--------------------------------------------------");
-        return ret;
+        NCNN_LOGE("INFO END--------------------------------------------------");
     }
 
     int size() {
         return changed_vecs.size();
+    }
+
+    int area() {
+        int _area = 0;
+        for (auto roi :changed_vecs) {
+            _area += (roi.x2 - roi. x1 + 1) * (roi.y2 - roi.y1 + 1);
+        }
+        return _area;
     }
 
     void forward_rect_conv_or_pool(
@@ -84,8 +84,8 @@ public:
         // TODO: not correct yet
         // int off = stride > 1 ? 1 : 0;
         if (pad >= 0) { // SAME
-            r1.x1 = std::max(0, (r2.x1 + pad) / stride);
-            r1.y1 = std::max(0, (r2.y1 + pad) / stride);
+            r1.x1 = ceil((r2.x1 + pad) / (float)stride);
+            r1.y1 = ceil((r2.y1 + pad) / (float)stride);
             r1.x2 = (r2.x2 - pad) / stride;
             r1.y2 = (r2.y2 - pad) / stride;
         }
@@ -104,7 +104,7 @@ public:
         x_offset = bottom_mrect.x_offset / stride;
         y_offset = bottom_mrect.y_offset / stride;
         layersize = bottom_mrect.layersize / stride;
-        NCNN_LOGE("IN FORWARD CONV OR POOL, INPUT LAYERSIZE=%d, OUTPUT LAYERSIZE=%d", bottom_mrect.layersize, layersize);
+        //NCNN_LOGE("IN FORWARD CONV OR POOL, INPUT LAYERSIZE=%d, OUTPUT LAYERSIZE=%d", bottom_mrect.layersize, layersize);
 
         size_t size = bottom_mrect.size();
         changed_vecs.resize(size);
@@ -125,6 +125,13 @@ public:
             r1.y2 = std::min(r2.y2 + ksize - 1, layersize - 1);
 
         }
+        else if (pad == 0) {
+            // pad one circle for kernelsize  = 1
+            r1.x1 = std::max(0, r2.x1 - 1);
+            r1.y1 = std::max(0, r2.y1 - 1);
+            r1.x2 = std::min(r2.x2 + 1, layersize - 1);
+            r1.y2 = std::min(r2.y2 + 1, layersize - 1);
+        }
         else {
             r1.x1 = r2.x1;
             r1.y1 = r2.y1;
@@ -144,6 +151,12 @@ public:
 
         }
         return 0;
+    }
+
+    void clear() {
+        while (!changed_vecs.empty()) {
+            changed_vecs.pop_back();
+        }
     }
 
     int x_offset;

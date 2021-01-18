@@ -47,7 +47,7 @@ int Convolution::load_param(const ParamDict& pd)
     activation_params = pd.get(10, Mat());
     impl_type = pd.get(17, 0);
 
-    NCNN_LOGE("Convolution  pad = %d %d  ksize=%d %d  stride=%d %d", pad_left, pad_top, kernel_w, kernel_h, stride_w, stride_h);
+    //NCNN_LOGE("Convolution  pad = %d %d  ksize=%d %d  stride=%d %d", pad_left, pad_top, kernel_w, kernel_h, stride_w, stride_h);
 
     if (int8_scale_term)
     {
@@ -482,13 +482,15 @@ int Convolution::forward_int8(const Mat& bottom_blob, Mat& top_blob, const Optio
 
 
 #if NCNN_CNNCACHE
-bool Convolution::needs_cache() const {return false;}
+bool Convolution::needs_cache() const {return true;}
 int Convolution::forward_roi(MRect& bottom_padroi, MRect& top_roi, MRect& top_padroi) const
 {
+    //NCNN_LOGE("in convolution, bottom_padroi info: ");
+    //bottom_padroi.info();
     top_roi.forward_in_conv_or_pool(bottom_padroi, pad_left, kernel_w, stride_w);
     top_padroi.pad_in_conv_or_pool(top_roi, pad_left, kernel_w);
     // check if there is intersected rects
-    NCNN_LOGE("OK 11");
+    //NCNN_LOGE("OK 11");
     if (top_padroi.size() > 1) {
         size_t maxx = 0;
         size_t max = top_padroi.changed_vecs.size();
@@ -499,8 +501,9 @@ int Convolution::forward_roi(MRect& bottom_padroi, MRect& top_roi, MRect& top_pa
                 for (size_t j = i + 1; j < maxx; j++) {
                     const struct rect temp1 = top_padroi.changed_vecs[i];
                     const struct rect temp2 = top_padroi.changed_vecs[j];
-                    if ((temp2.x1 >= temp1.x1 && temp2.y1 >= temp1.y1 && temp2.x1 <= temp1.x2 && temp2.y1 <= temp1.y2) 
-                        || (temp1.x1 >= temp2.x1 && temp1.y1 >= temp2.y1 && temp1.x1 <= temp2.x2 && temp1.y1 <= temp2.y2)) {
+                    if (!((temp2.x1 > temp1.x2 || temp1.x1 > temp2.x2) || (temp2.y1 > temp1.y2 || temp1.y1 > temp2.y2))){
+                    //if ((temp2.x1 >= temp1.x1 && temp2.y1 >= temp1.y1 && temp2.x1 <= temp1.x2 && temp2.y1 <= temp1.y2) 
+                    //    || (temp1.x1 >= temp2.x1 && temp1.y1 >= temp2.y1 && temp1.x1 <= temp2.x2 && temp1.y1 <= temp2.y2)) {
                         // intersected
                         int x1 = std::min(temp1.x1, temp2.x1);
                         int y1 = std::min(temp1.y1, temp2.y1);
@@ -521,11 +524,11 @@ int Convolution::forward_roi(MRect& bottom_padroi, MRect& top_roi, MRect& top_pa
         }
     }
     
-    NCNN_LOGE("OK 22");
-    NCNN_LOGE("in convolution, top_roi info: ");
+    //NCNN_LOGE("OK 22");
+    /*NCNN_LOGE("in convolution, top_roi info: ");
     top_roi.info();
-    NCNN_LOGE("in convolution, top_padroi info: ");
-    top_padroi.info();
+    NCNN_LOGE("top_padroi info: ");
+    top_padroi.info();*/
 
     //NCNN_LOGE("IN CONV LAYER, LAYER SIZE = %d", top_roi.layersize);
     //NCNN_LOGE("IN CONV LAYER pad = %d %d  ksize=%d %d  stride=%d %d", pad_left, pad_top, kernel_w, kernel_h, stride_w, stride_h);
@@ -534,7 +537,7 @@ int Convolution::forward_roi(MRect& bottom_padroi, MRect& top_roi, MRect& top_pa
     return 0;
 }
 
-int Convolution::forward_cached(const Mat& bottom_blob, Mat& top_blob, const Option& opt, MRect& bottom_padroi, MRect& top_roi, MRect& top_padroi, Mat& cached_blob) const
+int Convolution::forward_cached(const Mat& bottom_blob, Mat& top_blob, const Option& opt, MRect& bottom_padroi, MRect& top_roi, MRect& top_padroi, Mat& cached_blob, std::vector<Mat>& temp_top) const
 {
     int w = bottom_blob.w;
     int h = bottom_blob.h;
@@ -602,12 +605,14 @@ int Convolution::forward_cached(const Mat& bottom_blob, Mat& top_blob, const Opt
             memcpy((float*)new_bottom_blob.data + j*new_w*sizeof(float), (float*)bottom_blob.data+y1*w+x1, new_w*sizeof(float));
         }
         //Mat& new_top_blob;
-        int ret = Convolution::forward(new_bottom_blob, top_blob, opt);
+        Mat& new_top_blob = temp_top[i];
+        int ret = Convolution::forward(new_bottom_blob, new_top_blob, opt);
         //top_blob.release();
     }
 
     //int ret = Convolution::forward(bottom_blob, top_blob, opt);
     //top_blob.release();
+    NCNN_LOGE("in cached_version of conv.cpp");
     return Convolution::forward(bottom_blob, top_blob, opt);
 }
 

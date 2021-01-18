@@ -261,8 +261,10 @@ int Concat::forward(const std::vector<Mat>& bottom_blobs, std::vector<Mat>& top_
 bool Concat::needs_cache() const {return false;}
 int Concat::forward_roi(std::vector<MRect>& bottom_padroi, std::vector<MRect>& top_roi, std::vector<MRect>& top_padroi) const
 {
-    NCNN_LOGE("IN FORWARD ROI OF CONCAT");
-    //NCNN_LOGE("IN FORWARD ROI OF CONCAT, INPUT LAYERSIZE=%d", bottom_padroi[0].layersize);
+    //NCNN_LOGE("IN FORWARD ROI OF CONCAT, # OF INPUT BLOB=%d, BOTTOM PADROIs ARE:", bottom_padroi.size());
+    /*for (size_t i = 0; i < bottom_padroi.size(); i++) {
+        bottom_padroi[i].info();
+    }*/
     top_roi.resize(1);
     top_roi[0].layersize = bottom_padroi[0].layersize;
     top_padroi.resize(1);
@@ -299,7 +301,11 @@ int Concat::forward_roi(std::vector<MRect>& bottom_padroi, std::vector<MRect>& t
             mr2.add_rect(x1, y1, x2, y2);
         }
     }
-    NCNN_LOGE("END OF CONCAT");
+    /*NCNN_LOGE("in concat, TOP_ROI INFO:");
+    top_roi[0].info();
+    NCNN_LOGE("in concat, TOP_PADROI INFO:");
+    top_padroi[0].info();*/
+    //NCNN_LOGE("END OF CONCAT");
     //top_roi.forward_in_conv_or_pool(bottom_padroi, pad_left, kernel_w, stride_w);
     //top_padroi.pad_in_conv_or_pool(top_roi, pad_left, kernel_w);
     //NCNN_LOGE("IN CONCAT LAYER");
@@ -311,3 +317,4 @@ int Concat::forward_roi(std::vector<MRect>& bottom_padroi, std::vector<MRect>& t
 #endif
 
 } // namespace ncnn
+

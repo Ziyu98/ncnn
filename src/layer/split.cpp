@@ -63,4 +63,24 @@ int Split::forward(const std::vector<VkImageMat>& bottom_blobs, std::vector<VkIm
 }
 #endif // NCNN_VULKAN
 
+
+#if NCNN_CNNCACHE
+bool Split::needs_cache() const {return false;}
+int Split::forward_roi(std::vector<MRect>& bottom_padroi, std::vector<MRect>& top_roi, std::vector<MRect>& top_padroi) const
+{
+    const MRect& bottom_pad = bottom_padroi[0];
+    //NCNN_LOGE("in split, there are %d output rois", top_padroi.size());
+    for (size_t i = 0; i < top_padroi.size(); i++) {
+        top_padroi[i] = bottom_pad;
+        top_roi[i] = bottom_pad;
+        /*NCNN_LOGE("in split, top_roi info: ");
+        top_roi[i].info();
+        NCNN_LOGE("in split top_padroi info: ");
+        top_padroi[i].info();*/
+    }
+
+    return 0;
+}
+
+#endif
 } // namespace ncnn

@@ -979,13 +979,23 @@ inline int Mat::cloneFrom(const Mat target)
     size_t totalsize = target.total() * sizeof(float);
     if (data == NULL || target.total() > total())
         data = (float*)fastMalloc(totalsize + (int)sizeof(*refcount));
+
+    refcount = (int*)(((unsigned char*)data) + totalsize);
+    *refcount = 1;
     
     dims = target.dims;
+    elemsize = target.elemsize;
+    elempack= target.elempack;
     w = target.w;
     h = target.h;
     c = target.c;
     cstep = target.cstep;
-    refcount = NULL;
+    //if (refcount == NULL) {
+    //    *refcount = 1;
+    //}
+    //else {
+    //    refcount = target.refcount;
+    //}
 
     if (target.total() > 0)
     {

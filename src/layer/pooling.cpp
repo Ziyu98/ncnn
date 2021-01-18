@@ -330,12 +330,47 @@ bool Pooling::needs_cache() const {return false;}
 int Pooling::forward_roi(MRect& bottom_padroi, MRect& top_roi, MRect& top_padroi) const
 {
     top_roi.forward_in_conv_or_pool(bottom_padroi, pad_left, kernel_w, stride_w);
-    top_padroi.copyFrom(top_roi);
+    top_padroi.pad_in_conv_or_pool(top_roi, pad_left, kernel_w);
+    if (top_padroi.size() > 1) {
+        size_t maxx = 0;
+        size_t max = top_padroi.changed_vecs.size();
+        while (maxx != max) {
+            max = top_padroi.changed_vecs.size();
+            maxx = top_padroi.changed_vecs.size();
+            for (size_t i = 0; i < maxx; i++) {
+                for (size_t j = i + 1; j < maxx; j++) {
+                    const struct rect temp1 = top_padroi.changed_vecs[i];
+                    const struct rect temp2 = top_padroi.changed_vecs[j];
+                    if ((temp2.x1 >= temp1.x1 && temp2.y1 >= temp1.y1 && temp2.x1 <= temp1.x2 && temp2.y1 <= temp1.y2) 
+                        || (temp1.x1 >= temp2.x1 && temp1.y1 >= temp2.y1 && temp1.x1 <= temp2.x2 && temp1.y1 <= temp2.y2)) {
+                        // intersected
+                        int x1 = std::min(temp1.x1, temp2.x1);
+                        int y1 = std::min(temp1.y1, temp2.y1);
+                        int x2 = std::max(temp1.x2, temp2.x2);
+                        int y2 = std::max(temp1.y2, temp2.y2);
+                        auto begin = top_padroi.changed_vecs.begin();
+                        // ???? wrong!!!!
+                        //top_padroi.changed_vecs.erase(begin + i);
+                        top_padroi.changed_vecs[i] = rect(x1, y1, x2, y2);
+                        top_padroi.changed_vecs.erase(begin + j);
+                        
+                        j--;
+                        maxx--;
+                    }
+
+                }
+            }
+        }
+    }
     //top_padroi.pad_in_conv_or_pool(top_roi, pad_left, kernel_w);
     //NCNN_LOGE("forward_roi pad = %d %d  ksize=%d %d  stride=%d %d", pad_left, pad_top, kernel_w, kernel_h, stride_w, stride_h);
     //NCNN_LOGE("IN POOLING LAYER, pad = %d %d  ksize=%d %d  stride=%d %d", pad_left, pad_top, kernel_w, kernel_h, stride_w, stride_h);
     //NCNN_LOGE("ROI IS: %d, %d, %d, %d", top_roi.changed_vecs[0].x1, top_roi.changed_vecs[0].y1, top_roi.changed_vecs[0].x2, top_roi.changed_vecs[0].y2);
     //NCNN_LOGE("PAD ROI IS: %d, %d, %d, %d", top_padroi.changed_vecs[0].x1, top_padroi.changed_vecs[0].y1, top_padroi.changed_vecs[0].x2, top_padroi.changed_vecs[0].y2);
+    /*NCNN_LOGE("in pooling, top_roi info: ");
+    top_roi.info();
+    NCNN_LOGE("in pooling, top_padroi info: ");
+    top_padroi.info();*/
     return 0;
 }
 

@@ -117,9 +117,13 @@ int Layer::forward_roi(std::vector<MRect>& bottom_padrois, std::vector<MRect>& t
 {
     for (MRect& roi: top_rois) {
         roi.copyFrom(bottom_padrois[0]);
+        //NCNN_LOGE("in forward_vector, top_roi info: ");
+        //roi.info();
     }
     for (MRect& roi: top_padrois) {
         roi.copyFrom(bottom_padrois[0]);
+        //NCNN_LOGE("top_padroi info: ");
+        //roi.info();
     }
     return 0;
 }
@@ -128,11 +132,15 @@ int Layer::forward_roi(MRect& bottom_padroi, MRect& top_roi, MRect& top_padroi) 
 {
     top_roi.copyFrom(bottom_padroi);
     top_padroi.copyFrom(bottom_padroi);
+    /*NCNN_LOGE("in forward (relu or bn), top_roi info: ");
+    top_roi.info();
+    NCNN_LOGE("in forward (relu or bn), top_padroi info: ");
+    top_padroi.info();*/
     //NCNN_LOGE("IN PURE FORWARD_ROI, INPUT LAYERSIZE=%d, OUTPUT LAYERSIZE=%d", bottom_padroi.layersize, top_roi.layersize);
     return 0;
 }
 
-int Layer::forward_cached(const Mat& bottom_blob, Mat& top_blob, const Option& opt, MRect& bottom_padroi, MRect& top_roi, MRect& top_padroi, Mat& cached_blob) const
+int Layer::forward_cached(const Mat& bottom_blob, Mat& top_blob, const Option& opt, MRect& bottom_padroi, MRect& top_roi, MRect& top_padroi, Mat& cached_blob, std::vector<Mat>& temp_top) const
 {
     return forward(bottom_blob, top_blob, opt);
 }

@@ -1117,7 +1117,7 @@ int Net::forward_layer(int layer_index, std::vector<Mat>& blob_mats, Extractor* 
 {
     const Layer* layer = layers[layer_index];
 
-    //NCNN_LOGE("forward_layer = %d， one_blob_only is = %d, type is = %s, bottom size = %d, top size = %d", layer_index, layer->one_blob_only, layer->type.c_str(), layer->bottoms.size(), layer->tops.size());
+    //NCNN_LOGE("forward_layer index = %d， one_blob_only is = %d, type is = %d, name is = %s, bottom0 = %d, top0 = %d", layer_index, layer->one_blob_only, layer->typeindex, layer->name.c_str(), layer->bottoms[0], layer->tops[0]);
 
     if (layer->one_blob_only)
     {
@@ -1249,7 +1249,7 @@ int Net::forward_layer(int layer_index, std::vector<Mat>& blob_mats, Extractor* 
             if (extract->cache_mode) {
                 int ret = layer->forward_cached(bottom_blob, top_blob, opt,
                     extract->padrois[bottom_blob_index], extract->rois[top_blob_index],
-                    extract->padrois[top_blob_index], extract->blob_mats_cached[layer_index]);
+                    extract->padrois[top_blob_index], extract->blob_mats_cached[layer_index], extract->temp_tops[top_blob_index]);
             }
             else {
                 int ret = layer->forward(bottom_blob, top_blob, opt);
@@ -2579,11 +2579,12 @@ IMAGE_ALLOCATION_FAILED:
 Extractor::Extractor(const Net* _net, size_t blob_count)
     : net(_net)
 {
-    NCNN_LOGE("IN EXTRACTOR, BLOB_COUNT = %d", blob_count);
+    NCNN_LOGE("IN EXTRACTOR, BLOB_COUNT = %d, LAYERS SIZE = %d", blob_count, net->layers.size());
     blob_mats.resize(blob_count);
     opt = net->opt;
 #if NCNN_CNNCACHE
     blob_mats_cached.resize(net->layers.size());
+    temp_tops.resize(blob_count, std::vector<Mat>(10));
     rois.resize(blob_count);
     padrois.resize(blob_count);
     cache_mode = true;
@@ -2989,6 +2990,8 @@ int Extractor::update_cnncache()
             int top_blob_index = layer->tops[0];
             Mat& top_blob = blob_mats[top_blob_index];
             cache_blob.cloneFrom(top_blob);
+	    //NCNN_LOGE("layer = %d, cached, output(top) = %d", i, top_blob_index);
+            //cache_blob = Mat(top_blob);
         }
     }
     return 0;
@@ -3005,6 +3008,28 @@ int Extractor::clear_blob_data()
 {
     for (Mat& mat: blob_mats) {
         mat.release();
+    }
+    return 0;
+}
+
+int Extractor::clear_rois()
+{
+    for (int i = 0; i < rois.size(); i++) {
+        rois[i].clear();
+    }
+    for (int i = 0; i < padrois.size(); i++) {
+        padrois[i].clear();
+    }
+    return 0;
+}
+
+int Extractor::clear_temp_tops()
+{
+    for (auto tops: temp_tops) {
+        for (auto top: tops) {
+            if (!top.data)
+                top.release();
+        }
     }
     return 0;
 }

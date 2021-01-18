@@ -31,8 +31,20 @@ public:
 
 #if NCNN_CNNCACHE
     //virtual int forward_roi(MRect& bottom_padroi, MRect& top_roi, MRect& top_padroi) const;
-    //virtual int forward_cached(const Mat& bottom_blob, Mat& top_blob, const Option& opt, MRect& bottom_padroi, MRect& top_roi, MRect& top_padroi, Mat& cached_blob) const;*/
-    //virtual bool needs_cache() const;
+    virtual int forward_cached(const Mat& bottom_blob, Mat& top_blob, const Option& opt, MRect& bottom_padroi, MRect& top_roi, MRect& top_padroi, Mat& cached_blob, std::vector<Mat>& temp_top) const;
+    virtual bool needs_cache() const {return true;}
+    virtual bool compare(const float* dst, const float* src, int size) const 
+    {
+        for (int i = 0; i <= size; i++) {
+            float a = *(dst + i);
+            float b = *(src + i);
+            if (a != b) {
+                NCNN_LOGE("i = %d, dst = %f, src = %f", i, a, b);
+                return false;
+            }
+        }
+        return true;
+    }
 #endif
 
 protected:

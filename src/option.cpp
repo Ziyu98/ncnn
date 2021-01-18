@@ -21,7 +21,8 @@ namespace ncnn {
 Option::Option()
 {
     lightmode = true;
-    num_threads = get_cpu_count();
+    //num_threads = get_cpu_count();
+    num_threads = 1;
     blob_allocator = 0;
     workspace_allocator = 0;
 
@@ -35,14 +36,14 @@ Option::Option()
     openmp_blocktime = 20;
 
     use_winograd_convolution = true;
-    use_sgemm_convolution = true;
-    use_int8_inference = true;
+    use_sgemm_convolution = false;
+    use_int8_inference = false;
     use_vulkan_compute = false; // TODO enable me
 
-    use_fp16_packed = true;
-    use_fp16_storage = true;
-    use_fp16_arithmetic = true;
-    use_int8_storage = true;
+    use_fp16_packed = false;
+    use_fp16_storage = false;
+    use_fp16_arithmetic = false;
+    use_int8_storage = false;
     use_int8_arithmetic = false;
 
     use_packing_layout = false;

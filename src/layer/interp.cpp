@@ -1,3 +1,4 @@
+
 // Tencent is pleased to support the open source community by making ncnn available.
 //
 // Copyright (C) 2017 THL A29 Limited, a Tencent company. All rights reserved.
@@ -554,9 +555,9 @@ int Interp::forward(const std::vector<Mat>& bottom_blobs, std::vector<Mat>& top_
 bool Interp::needs_cache() const {return false;}
 int Interp::forward_roi(MRect& bottom_padroi, MRect& top_roi, MRect& top_padroi) const
 {
-    NCNN_LOGE("BEGINING OF INTERP");
-    NCNN_LOGE("BOTTOM ROI INFO:");
-    bottom_padroi.info();
+    //NCNN_LOGE("BEGINING OF INTERP");
+    //NCNN_LOGE("BOTTOM ROI INFO:");
+    //bottom_padroi.info();
     top_roi.layersize = bottom_padroi.layersize * height_scale;
     for (size_t i = 0, max = bottom_padroi.size(); i < max; i++) {
         int x1 = bottom_padroi.changed_vecs[i].x1;
@@ -603,7 +604,11 @@ int Interp::forward_roi(MRect& bottom_padroi, MRect& top_roi, MRect& top_padroi)
     }
     
     top_padroi.copyFrom(top_roi);
-    NCNN_LOGE("END OF INTERP");
+    /*NCNN_LOGE("in interp, top_roi info: ");
+    top_roi.info();
+    NCNN_LOGE("top_padroi info: ");
+    top_padroi.info();*/
+    //NCNN_LOGE("END OF INTERP");
     //top_roi.forward_in_conv_or_pool(bottom_padroi, pad_left, kernel_w, stride_w);
     //top_padroi.pad_in_conv_or_pool(top_roi, pad_left, kernel_w);
     //NCNN_LOGE("IN FORWARD ROI OF INTERP, OUTPUT LAYERSIZE=%d %d", top_roi.layersize, top_padroi.layersize);

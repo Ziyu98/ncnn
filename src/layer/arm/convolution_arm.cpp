@@ -481,19 +481,19 @@ int Convolution_arm::destroy_pipeline(const Option& opt)
 int Convolution_arm::forward(const Mat& bottom_blob, Mat& top_blob, const Option& opt) const
 {
     //return Convolution::forward(bottom_blob, top_blob, opt);
-    NCNN_LOGE("USING FORWARD IN CONV_ARM NOW!!!!, input shape:%d,%d,%d,%d", bottom_blob.dims, bottom_blob.w, bottom_blob.h, bottom_blob.c);
+    //NCNN_LOGE("USING FORWARD IN CONV_ARM NOW!!!!, input shape:%d,%d,%d,%d", bottom_blob.dims, bottom_blob.w, bottom_blob.h, bottom_blob.c);
     if (opt.use_int8_inference && weight_data.elemsize == (size_t)1u)
     {
-        NCNN_LOGE("CONV_ARM INE 487");
+        //NCNN_LOGE("CONV_ARM INE 487");
         return forward_int8_arm(bottom_blob, top_blob, opt);
     }
 
     if (bottom_blob.dims != 3)
     {
-        NCNN_LOGE("CONV_ARM INE 493");
+        //NCNN_LOGE("CONV_ARM INE 493");
         return Convolution::forward(bottom_blob, top_blob, opt);
     }
-    NCNN_LOGE("CONV_ARM INE 496");
+    //NCNN_LOGE("CONV_ARM INE 496");
 
     int elembits = bottom_blob.elembits();
 
@@ -501,11 +501,11 @@ int Convolution_arm::forward(const Mat& bottom_blob, Mat& top_blob, const Option
     if (opt.use_fp16_storage && elembits == 16)
     {
         if (opt.use_fp16_arithmetic) {
-            NCNN_LOGE("CONV_ARM INE 502");
+            //NCNN_LOGE("CONV_ARM INE 502");
             return forward_fp16sa(bottom_blob, top_blob, opt);
         }
         else {
-            NCNN_LOGE("CONV_ARM INE 506");
+            //NCNN_LOGE("CONV_ARM INE 506");
             return forward_fp16s(bottom_blob, top_blob, opt);
         }
     }
@@ -513,10 +513,10 @@ int Convolution_arm::forward(const Mat& bottom_blob, Mat& top_blob, const Option
 
     if (opt.use_bf16_storage && elembits == 16) 
     {
-        NCNN_LOGE("CONV_ARM INE 516");
+        //NCNN_LOGE("CONV_ARM INE 516");
         return forward_bf16s(bottom_blob, top_blob, opt);
     }
-    NCNN_LOGE("CONV_ARM INE 519");
+    //NCNN_LOGE("CONV_ARM INE 519");
     int w = bottom_blob.w;
     int h = bottom_blob.h;
     int channels = bottom_blob.c;
@@ -861,7 +861,7 @@ int Convolution_arm::forward(const Mat& bottom_blob, Mat& top_blob, const Option
 
     if (elempack == 1 && out_elempack == 1)
     {
-        NCNN_LOGE("impl_type=%d", impl_type);
+        //NCNN_LOGE("impl_type=%d", impl_type);
         if (impl_type > 0 && impl_type < 6 && impl_type != 4)
         {
             // engineering is magic.
@@ -1478,7 +1478,7 @@ int Convolution_arm::forward_fp16s(const Mat& bottom_blob, Mat& top_blob, const 
 
 int Convolution_arm::forward_fp16sa(const Mat& bottom_blob, Mat& top_blob, const Option& opt) const
 {
-    NCNN_LOGE("USING FP16SA IN CONV");
+    //NCNN_LOGE("USING FP16SA IN CONV");
     
     int w = bottom_blob.w;
     int h = bottom_blob.h;
@@ -1502,13 +1502,13 @@ int Convolution_arm::forward_fp16sa(const Mat& bottom_blob, Mat& top_blob, const
     int outw = (w - kernel_extent_w) / stride_w + 1;
     int outh = (h - kernel_extent_h) / stride_h + 1;
     int out_elempack = 1;
-    NCNN_LOGE("IN FP16SA, OUTPUT SHAPE: %d, %d", outw, outh);
+    //NCNN_LOGE("IN FP16SA, OUTPUT SHAPE: %d, %d", outw, outh);
     if (opt.use_packing_layout)
     {
         out_elempack = opt.use_fp16_arithmetic && num_output % 8 == 0 ? 8 : num_output % 4 == 0 ? 4 : 1;
     }
     size_t out_elemsize = elemsize / elempack * out_elempack;
-    NCNN_LOGE("OUTPUT SHAPE: %d, %d, %d, kernel_w: %d, kernel_extent_w: %d, stride: %d, pad: %d", outw, outh, num_output/out_elempack, kernel_w, kernel_extent_w, stride_w, pad_left);
+    //NCNN_LOGE("OUTPUT SHAPE: %d, %d, %d, kernel_w: %d, kernel_extent_w: %d, stride: %d, pad: %d", outw, outh, num_output/out_elempack, kernel_w, kernel_extent_w, stride_w, pad_left);
     top_blob.create(outw, outh, num_output / out_elempack, out_elemsize, out_elempack, opt.blob_allocator);
     if (top_blob.empty())
         return -100;
@@ -1539,7 +1539,7 @@ int Convolution_arm::forward_fp16sa(const Mat& bottom_blob, Mat& top_blob, const
             p2 += gap;
         }
     }
-    NCNN_LOGE("elempack=%d, out_elempack=%d", elempack, out_elempack);
+    //NCNN_LOGE("elempack=%d, out_elempack=%d", elempack, out_elempack);
     if (elempack == 8 && out_elempack == 8)
     {
         if (kernel_w == 1 && kernel_h == 1 && dilation_w == 1 && dilation_h == 1 && stride_w == 1 && stride_h == 1)
@@ -3155,19 +3155,157 @@ int Convolution_arm::forwardDilation_arm(const Mat& bottom_blob, Mat& top_blob, 
 
     return 0;
 }
-
 #if NCNN_CNNCACHE
-/*bool Convolution_arm::needs_cache() const {return false;}
-
-int Convolution_arm::forward_roi(MRect& bottom_padroi, MRect& top_roi, MRect& top_padroi) const
+int Convolution_arm::forward_cached(const Mat& bottom_blob, Mat& top_blob, const Option& opt, MRect& bottom_padroi, MRect& top_roi, MRect& top_padroi, Mat& cached_blob, std::vector<Mat>& temp_top) const
 {
-    top_roi.forward_in_conv_or_pool(bottom_padroi, pad_left, kernel_w, stride_w);
-    top_padroi.pad_in_conv_or_pool(top_roi, pad_left, kernel_w);
-    NCNN_LOGE("IN CONV_ARM, PAD IS %d, KERNEL IS %d, STRIDE IS %d", pad_left, kernel_w, stride_w);
-    NCNN_LOGE("ROI IS: %d, %d, %d, %d", top_roi.changed_vecs[0].x1, top_roi.changed_vecs[0].y1, top_roi.changed_vecs[0].x2, top_roi.changed_vecs[0].y2);
-    return 0;
+     
+    if (!((bottom_padroi.changed_vecs.size() == 1) && (bottom_padroi.changed_vecs[0].x1 == 0)
+        && (bottom_padroi.changed_vecs[0].y1 == 0) && (bottom_padroi.changed_vecs[0].x2 == bottom_padroi.layersize - 1)
+        && (bottom_padroi.changed_vecs[0].y2 == bottom_padroi.layersize - 1))){
+
+        int w = bottom_blob.w;
+        int h = bottom_blob.h;
+
+        /*float ratio = 1.0 * bottom_padroi.area() / w / h;
+        if (ratio > 0.6) {
+            NCNN_LOGE("baseline conv--1, layersize = %d", w);
+            NCNN_LOGE("in convolution, bottom_padroi info: ");
+            bottom_padroi.info();
+            return Convolution_arm::forward(bottom_blob, top_blob, opt);
+        }*/
+
+
+        int channels = bottom_blob.c;
+        size_t elemsize = bottom_blob.elemsize;
+        int elempack = bottom_blob.elempack;
+        int outw = w / stride_w;
+        int outh = h / stride_h;
+        
+        int out_elempack = (support_packing && opt.use_packing_layout && num_output % 4 == 0) ? 4 : 1;
+        size_t out_elemsize = elemsize / elempack * out_elempack;
+
+        
+
+        top_blob.create(outw, outh, num_output / out_elempack, out_elemsize, out_elempack, opt.blob_allocator);
+//begin comment        
+        memset(top_blob.data, 0, sizeof(float) * outw * outh * num_output);
+        //if (stride_h == 1) {
+            int pad = 0 ? kernel_w == 1 : 1;
+            for (int i = 0; i < top_padroi.size(); i++) {
+                int x1 = top_padroi.changed_vecs[i].x1;
+                int x2 = top_padroi.changed_vecs[i].x2;
+                int y1 = top_padroi.changed_vecs[i].y1;
+                int y2 = top_padroi.changed_vecs[i].y2;
+                int new_w = x2 - x1 + 1;
+                int new_h = y2 - y1 + 1;
+                for (int ch = 0; ch < num_output; ch++) {
+                    for (int j = y1; j < y1 + pad + 1; j++) {
+                        float* dst = top_blob.channel(ch).row(j) + x1;
+                        const float* src = cached_blob.channel(ch).row(j) + x1;
+                        memcpy(dst, src, sizeof(float) * (new_w));
+                    }
+                    for (int j = y1 + pad + 1; j <= y2 -pad - 1; j++) {
+                        float* dst1 = top_blob.channel(ch).row(j) + x1;
+                        const float* src1 = cached_blob.channel(ch).row(j) + x1;
+                        memcpy(dst1, src1, sizeof(float) * (pad + 1));
+                        float* dst2 = top_blob.channel(ch).row(j) + x2 - pad;
+                        const float* src2 = cached_blob.channel(ch).row(j) + x2 - pad;
+                        memcpy(dst2, src2, sizeof(float) * (pad + 1));
+                    }
+                    for (int j = y2 -pad; j <= y2; j++) {
+                        float* dst = top_blob.channel(ch).row(j) + x1;
+                        const float* src = cached_blob.channel(ch).row(j) + x1;
+                        memcpy(dst, src, sizeof(float) * (new_w));
+                    }
+
+
+                }
+            }
+        //}
+        
+        
+//end comment
+
+//begin comment
+//if (stride_h <= 1) {        
+        int max = bottom_padroi.size(); 
+        int tempidx = 0;
+        if (kernel_w > 1)
+            tempidx = 1;
+        for (int i = 0; i < max; i++) {
+            Mat new_bottom_blob;
+            int x1 = bottom_padroi.changed_vecs[i].x1;
+            int x2 = bottom_padroi.changed_vecs[i].x2;
+            int y1 = bottom_padroi.changed_vecs[i].y1;
+            int y2 = bottom_padroi.changed_vecs[i].y2;
+            if (stride_w == 2) {
+                if (x1 % 2 != 0)
+                    x1--;
+                if (y1 %2 != 0)
+                    y1--;
+            }
+            int new_w = x2 - x1 + 1;
+            int new_h = y2 - y1 + 1;
+            new_bottom_blob.create(new_w, new_h, channels, elemsize, opt.blob_allocator);
+            new_bottom_blob.data = (float*)fastMalloc(new_bottom_blob.total()*elemsize + (int)sizeof(new_bottom_blob.refcount));
+            //NCNN_LOGE("NEW_BOTTOM_BLOB W=%d,H=%d,C=%d,TOTAL=%d", new_w, new_h, channels, new_bottom_blob.total());
+            for (int ch = 0; ch < channels; ch++) {
+                for (int j = 0; j < new_h; j++) {
+                    float* dst = new_bottom_blob.channel(ch).row(j);
+                    const float* src = bottom_blob.channel(ch).row(j + y1) + x1;
+                    memcpy(dst, src, sizeof(float)*(new_w)); 
+                }
+            }
+
+
+            //for (int j = 0; j < new_h; j++) {
+                //memcpy((float*)new_bottom_blob.data + j*new_w*sizeof(elemsize), (float*)bottom_blob.data+(y1+j)*w+x1, new_w*sizeof(elemsize));
+            //}
+
+            //Mat& new_top_blob;
+            //NCNN_LOGE("NO CRASH BEFORE TEMP_TOP");
+            Mat& new_top_blob = temp_top[i];
+            //NCNN_LOGE("NO CRASH AFTER TEMP_TOP");
+            int ret = Convolution_arm::forward(new_bottom_blob, new_top_blob, opt);
+
+            int xx1 = top_roi.changed_vecs[i].x1;
+            int xx2 = top_roi.changed_vecs[i].x2;
+            int yy1 = top_roi.changed_vecs[i].y1;
+            int yy2 = top_roi.changed_vecs[i].y2;
+            int new_ww = xx2 - xx1 + 1;
+            int new_hh = yy2 - yy1 + 1;
+            if (num_output != top_blob.c or num_output != new_top_blob.c)
+                NCNN_LOGE("OUTPUT CHANNEL NOT MATCH!!");
+            for (int ch = 0; ch < num_output; ch++) {
+                for (int j = yy1; j <= yy2; j++) {
+                    float* dst = top_blob.channel(ch).row(j) + xx1;
+                    const float* src = new_top_blob.channel(ch).row(tempidx + j - yy1) + tempidx;
+                    //bool temp = compare(dst, src, new_ww);
+                    //NCNN_LOGE("I = %d DONE, DST INFO: BEGIN= %d, WIDTH = %d, SRC INFO: BEGIN = %d, %d, WIDTH = %d", i, j, new_ww, tempidx + j - yy1, tempidx, new_top_blob.w - tempidx);
+                    if (!dst || !src)
+                        NCNN_LOGE("DST OR SRC IS NULL!!!!");
+                    memcpy(dst, src, sizeof(float) *(xx2 - xx1 + 1));
+                }
+            }
+        }
+        NCNN_LOGE("USING MEMCPY");
+    //}
+//end comment
+
+        //int ret = Convolution::forward(bottom_blob, top_blob, opt);
+        //top_blob.release();
+        //Mat& new_top_blob = temp_top[0];
+        //int ret = Convolution_arm::forward(bottom_blob, new_top_blob, opt);
+        //NCNN_LOGE("USING CACHE NOW");
+        NCNN_LOGE("USING CACHE NOW");
+        return 1;
+    }
+    else {
+        NCNN_LOGE("baseline conv2");
+        return Convolution_arm::forward(bottom_blob, top_blob, opt);
+    }
 }
-*/
+
 #endif
 
 } // namespace ncnn

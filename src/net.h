@@ -257,9 +257,10 @@ public:
     int extract(int blob_index, VkImageMat& feat, VkCompute& cmd);
 #endif // NCNN_VULKAN
 
-protected:
+//protected:
     friend Extractor Net::create_extractor() const;
     Extractor(const Net* net, size_t blob_count);
+    Extractor() {};
 
 private:
     const Net* net;
@@ -278,6 +279,7 @@ public:
 #if NCNN_CNNCACHE
     bool cache_mode;
     std::vector<Mat> blob_mats_cached;
+    std::vector<std::vector<Mat>> temp_tops;
     std::vector<MRect> rois;
     std::vector<MRect> padrois;
     int input_rois(int blob_index, MRect& roi, MRect& padroi);
@@ -285,6 +287,8 @@ public:
     int update_cnncache();
     int clear_cnncache();
     int clear_blob_data();
+    int clear_temp_tops();
+    int clear_rois();
     void set_cache_mode(bool mode) {cache_mode = mode;}
 #endif
 

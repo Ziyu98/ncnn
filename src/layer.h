@@ -95,7 +95,7 @@ public:
 #if NCNN_CNNCACHE
     virtual int forward_roi(std::vector<MRect>& bottom_padrois, std::vector<MRect>& top_rois, std::vector<MRect>& top_padrois) const;
     virtual int forward_roi(MRect& bottom_padroi, MRect& top_roi, MRect& top_padroi) const;
-    virtual int forward_cached(const Mat& bottom_blob, Mat& top_blob, const Option& opt, MRect& bottom_padroi, MRect& top_roi, MRect& top_padroi, Mat& cached_blob) const;
+    virtual int forward_cached(const Mat& bottom_blob, Mat& top_blob, const Option& opt, MRect& bottom_padroi, MRect& top_roi, MRect& top_padroi, Mat& cached_blob, std::vector<Mat>& temp_top) const;
     virtual bool needs_cache() const {return false;}
 #endif
 
